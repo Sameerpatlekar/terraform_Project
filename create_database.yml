@@ -1,0 +1,66 @@
+---
+- name: Create Database Schema in AWS RDS
+  hosts: private
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    terraform_outputs: "{{ lookup('file', 'terraform_outputs.json') | from_json }}"
+    rds_endpoint: "{{ terraform_outputs.rds_endpoint.value }}"
+    mysql_port: 3306
+    db_name: "studentapp"
+    mysql_user: "admin"
+  vars_files:
+    - vault.yml
+  tasks:
+    - name: Update apt package list
+      apt:
+        update_cache: yes
+    - name: Ensure MySQL client is installed
+      apt:
+        name: mysql-client
+        state: present
+        update_cache: yes
+
+    - name: Ensure Python 3 and pip are installed
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - python3
+        - python3-pip
+
+    - name: Install MySQL Python library
+      apt:
+        name: python3-pymysql
+        state: present
+
+    
+    - name: Create database schema
+      community.mysql.mysql_db:
+        login_host: "{{ rds_endpoint }}"
+        login_port: "{{ mysql_port }}"
+        login_user: "{{ mysql_user }}"
+        login_password: "{{ mysql_password }}"
+        name: "{{ db_name }}"
+        state: present
+        login_unix_socket: null
+    
+    - name: Create table in the database schema
+      mysql_query:
+        login_host: "{{ rds_endpoint }}"
+        login_port: "{{ mysql_port }}"
+        login_user: "{{ mysql_user }}"
+        login_password: "{{ mysql_password }}"
+        login_db: "{{ db_name }}"
+        query: >
+          CREATE TABLE if not exists students(
+            student_id INT NOT NULL AUTO_INCREMENT,student_name VARCHAR(100) NOT NULL,
+            student_addr VARCHAR(100) NOT NULL,student_age VARCHAR(3) NOT NULL,student_qual VARCHAR(20) NOT NULL,student_percent VARCHAR(10) NOT NULL,student_year_passed VARCHAR(10) NOT NULL,PRIMARY KEY (student_id)
+          );
+        login_unix_socket: null
+    - name: Connect to MySQL and run a simple query
+      shell: mysql -h {{ rds_endpoint }} -P {{ mysql_port }} -u {{ mysql_user }} -p{{ mysql_password }} --protocol=TCP -e "SHOW DATABASES;"
+      register: mysql_result
+    - debug:
+        var: mysql_result.stdout
+

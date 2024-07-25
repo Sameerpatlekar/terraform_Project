@@ -1,0 +1,80 @@
+---
+- name: Install Tomcat
+  hosts: private
+  become: true
+  vars:
+    user: tomcat
+    group: tomcat
+    db_instance_port: 3306
+    db_name: "studentapp"
+    db_user: "admin"
+    terraform_outputs: "{{ lookup('file', 'terraform_outputs.json') | from_json }}"
+    rds_endpoint: "{{ terraform_outputs.rds_endpoint.value }}"
+  vars_files:
+    - vault.yml
+  tasks:
+    - name: Update apt package list
+      apt:
+        update_cache: yes
+    - name: Install OpenJDK 11
+      apt:
+        name: openjdk-11-jdk
+        state: present
+    - name: Create Tomcat group
+      group:
+        name: "{{ group }}"
+
+    - name: Create Tomcat user
+      user:
+        name: "{{ user }}"
+        group: tomcat
+        home: /opt/tomcat
+        shell: /bin/false
+    - name: Download Tomcat
+      get_url:
+        url: "https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.90/bin/apache-tomcat-9.0.90.tar.gz"
+        dest: /opt/tomcat
+    - name: Create Tomcat directory
+      file:
+        path: /opt/tomcat
+        state: directory
+        owner: "{{ user }}"
+        group: "{{ group }}"
+    - name: Extract Tomcat in opt
+      unarchive:
+        src: /opt/tomcat/apache-tomcat-9.0.90.tar.gz
+        dest: /opt/tomcat
+        remote_src: yes
+    - name: Set permissions on Tomcat directory
+      file:
+        path: /opt/tomcat/apache-tomcat-9.0.90
+        state: directory
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        recurse: yes
+    - name: Ensure Tomcat is executable
+      file:
+        path: /opt/tomcat/apache-tomcat-9.0.90/bin/catalina.sh
+        mode: '0755'
+        owner: "{{ user }}"
+        group: "{{ group }}"
+    - name: Download jar file and store in lib
+      get_url:
+        url: "https://s3-us-west-2.amazonaws.com/studentapi-cit/mysql-connector.jar"
+        dest: /opt/tomcat/apache-tomcat-9.0.90/lib
+    - name: Download war file and store in webapps
+      get_url:
+        url: "https://s3-us-west-2.amazonaws.com/studentapi-cit/student.war"
+        dest: /opt/tomcat/apache-tomcat-9.0.90/webapps
+    - name: Add a Resource element for JDBC DataSource
+      blockinfile:
+        path: /opt/tomcat/apache-tomcat-9.0.90/conf/context.xml
+        marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+        insertafter: "<Context>"
+        block: |
+          <Resource name="jdbc/TestDB" auth="Container" type="javax.sql.DataSource"
+               maxTotal="100" maxIdle="30" maxWaitMillis="10000"
+               username="{{ db_user }}" password="{{ mysql_password }}" driverClassName="com.mysql.jdbc.Driver"
+               url="jdbc:mysql://{{ rds_endpoint }}:3306/{{ db_name }}"/>
+    - name: Start the script
+      shell: /opt/tomcat/apache-tomcat-9.0.90/bin/catalina.sh start

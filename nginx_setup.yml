@@ -1,0 +1,63 @@
+---
+- name: Install and configure NGINX as a reverse proxy
+  hosts: bastion
+  become: yes
+  vars:
+    terraform_outputs: "{{ lookup('file', 'terraform_outputs.json') | from_json }}"
+    private_ip: "{{ terraform_outputs.private_instance_private_ip.value }}"
+    load_balancer_dns: "{{ terraform_outputs.load_balancer_dns.value }}"
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install NGINX
+      apt:
+        name: nginx
+        state: present
+
+    - name: Create NGINX configuration for reverse proxy
+      copy:
+        dest: /etc/nginx/sites-available/reverse_proxy
+        content: |
+          server {
+              listen 80;
+
+              location / {
+                  proxy_pass http://{{ load_balancer_dns }};
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+
+              location /student {
+                  proxy_pass http://{{ load_balancer_dns }};
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+
+              
+          }
+
+    - name: Enable reverse proxy configuration
+      file:
+        src: /etc/nginx/sites-available/reverse_proxy
+        dest: /etc/nginx/sites-enabled/reverse_proxy
+        state: link
+    - name: Remove default NGINX configuration
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Test NGINX configuration
+      command: nginx -t
+      register: nginx_test
+      failed_when: nginx_test.rc != 0
+
+    - name: Restart NGINX
+      service:
+        name: nginx
+        state: restarted

@@ -1,0 +1,50 @@
+{
+  "dns_record_name": {
+    "sensitive": false,
+    "type": "string",
+    "value": "sameer.cloud"
+  },
+  "load_balancer_dns": {
+    "sensitive": false,
+    "type": "string",
+    "value": "internal-app-load-balancer-296796038.eu-west-2.elb.amazonaws.com"
+  },
+  "name_servers": {
+    "sensitive": false,
+    "type": [
+      "list",
+      "string"
+    ],
+    "value": [
+      "ns-1000.awsdns-61.net",
+      "ns-1339.awsdns-39.org",
+      "ns-1586.awsdns-06.co.uk",
+      "ns-310.awsdns-38.com"
+    ]
+  },
+  "private_instance_private_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "192.168.2.151"
+  },
+  "public_instance_public_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "18.171.203.49"
+  },
+  "rds_endpoint": {
+    "sensitive": false,
+    "type": "string",
+    "value": "terraform-20240711175116432500000003.cpoikgsmuynr.eu-west-2.rds.amazonaws.com"
+  },
+  "subnet_id_1": {
+    "sensitive": false,
+    "type": "string",
+    "value": "subnet-01ad85c2bb906c616"
+  },
+  "subnet_id_2": {
+    "sensitive": false,
+    "type": "string",
+    "value": "subnet-0e59e4701f0beaffb"
+  }
+}
