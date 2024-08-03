@@ -20,7 +20,7 @@ pipeline {
                  script{
                         dir("terraform")
                         {
-                            git branch: 'master', url: 'https://github.com/Sameerpatlekar/terraform_Project.git'
+                            git branch: 'future_branch', url: 'https://github.com/Sameerpatlekar/terraform_Project.git'
                         }
                     }
                 }
@@ -53,7 +53,12 @@ pipeline {
                   sh 'pwd;cd terraform/ ; terraform apply -input=false tfplan'
             }
         }
-    }  
+        stage('Apply') {
+            steps { 
+                  ansiblePlaybook credentialsId: 'jenkins-private-access', disableHostKeyChecking: true, installation: 'ansible', inventory: 'terraform/inventory.ini', playbook: 'terraform/ansible_script/main_playbook.yml', vaultCredentialsId: 'vault-password', vaultTmpPath: 'terraform/ansible_script/'
+            }
+        }
+    }
     post {
         success {
             echo 'Build was successful, cleaning workspace...'
