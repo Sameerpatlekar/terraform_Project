@@ -32,7 +32,7 @@
         shell: /bin/false
     - name: Download Tomcat
       get_url:
-        url: "https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.90/bin/apache-tomcat-9.0.90.tar.gz"
+        url: "https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.91/bin/apache-tomcat-9.0.91.tar.gz"
         dest: /opt/tomcat
     - name: Create Tomcat directory
       file:
@@ -42,33 +42,33 @@
         group: "{{ group }}"
     - name: Extract Tomcat in opt
       unarchive:
-        src: /opt/tomcat/apache-tomcat-9.0.90.tar.gz
+        src: /opt/tomcat/apache-tomcat-9.0.91.tar.gz
         dest: /opt/tomcat
         remote_src: yes
     - name: Set permissions on Tomcat directory
       file:
-        path: /opt/tomcat/apache-tomcat-9.0.90
+        path: /opt/tomcat/apache-tomcat-9.0.91
         state: directory
         owner: "{{ user }}"
         group: "{{ group }}"
         recurse: yes
     - name: Ensure Tomcat is executable
       file:
-        path: /opt/tomcat/apache-tomcat-9.0.90/bin/catalina.sh
+        path: /opt/tomcat/apache-tomcat-9.0.91/bin/catalina.sh
         mode: '0755'
         owner: "{{ user }}"
         group: "{{ group }}"
     - name: Download jar file and store in lib
       get_url:
         url: "https://s3-us-west-2.amazonaws.com/studentapi-cit/mysql-connector.jar"
-        dest: /opt/tomcat/apache-tomcat-9.0.90/lib
+        dest: /opt/tomcat/apache-tomcat-9.0.91/lib
     - name: Download war file and store in webapps
       get_url:
         url: "https://s3-us-west-2.amazonaws.com/studentapi-cit/student.war"
-        dest: /opt/tomcat/apache-tomcat-9.0.90/webapps
+        dest: /opt/tomcat/apache-tomcat-9.0.91/webapps
     - name: Add a Resource element for JDBC DataSource
       blockinfile:
-        path: /opt/tomcat/apache-tomcat-9.0.90/conf/context.xml
+        path: /opt/tomcat/apache-tomcat-9.0.91/conf/context.xml
         marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
         insertafter: "<Context>"
         block: |
@@ -77,4 +77,4 @@
                username="{{ db_user }}" password="{{ mysql_password }}" driverClassName="com.mysql.jdbc.Driver"
                url="jdbc:mysql://{{ rds_endpoint }}:3306/{{ db_name }}"/>
     - name: Start the script
-      shell: /opt/tomcat/apache-tomcat-9.0.90/bin/catalina.sh start
+      shell: /opt/tomcat/apache-tomcat-9.0.91/bin/catalina.sh start

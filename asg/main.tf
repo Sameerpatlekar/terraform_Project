@@ -13,8 +13,8 @@ resource "aws_launch_template" "custom_temp" {
               <<-EOF
               #!/bin/bash
               sudo -i
-              chmod 777 /opt/tomcat/apache-tomcat-9.0.90/bin/catalina.sh
-              ./opt/tomcat/apache-tomcat-9.0.90/bin/catalina.sh start
+              chmod 777 /opt/tomcat/apache-tomcat-9.0.91/bin/catalina.sh
+              ./opt/tomcat/apache-tomcat-9.0.91/bin/catalina.sh start
               cd /root
               systemctl start mariadb
               systemctl enable mariadb
