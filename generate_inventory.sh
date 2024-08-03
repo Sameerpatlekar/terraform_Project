@@ -7,9 +7,9 @@ PRIVATE_IP=$(terraform output -raw private_instance_private_ip)
 # Create the Ansible inventory file
 cat > inventory.ini <<EOF
 [bastion]
-${PUBLIC_IP} ansible_user=ubuntu ansible_port=22 ansible_ssh_private_key_file=/home/sameer/.ssh/id_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+${PUBLIC_IP} ansible_user=ubuntu ansible_port=22 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 
 [private]
-${PRIVATE_IP} ansible_user=ubuntu ansible_port=22 ansible_ssh_private_key_file=/home/sameer/.ssh/id_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_python_interpreter=/usr/bin/python3 ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -i /home/sameer/.ssh/id_rsa ubuntu@${PUBLIC_IP}" -o StrictHostKeyChecking=no' 
+${PRIVATE_IP} ansible_user=ubuntu ansible_port=22 ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_python_interpreter=/usr/bin/python3 ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p ubuntu@${PUBLIC_IP}" -o StrictHostKeyChecking=no' 
 
 EOF
