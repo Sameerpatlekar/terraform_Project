@@ -66,40 +66,6 @@ module "rds" {
   db_password = "admin123" #data.vault_kv_secret_v2.example.data["db_password"]   
 }
 
-module "alb" {
-  source = "./lb"
-  vpc_id = module.vpc.vpc_id
-  subnetid_1 = module.vpc.private_subnet_id_1
-  subnetid_2 = module.vpc.private_subnet_id_2
-  security_groups = module.sg.sg_ids 
-  intance_id = module.ec2.instance_id_private
-}
-
-module "asg" {
-  source = "./asg"
-  key_name = "public-key"
-  security_groups = module.sg.sg_ids 
-  private_subnet_id_1 = module.vpc.private_subnet_id_1
-  private_subnet_id_2 =  module.vpc.private_subnet_id_2
-  instance_id = module.ec2.instance_id_private
-  target_group_arn = module.alb.target_group_arn
-  depends_on = [null_resource.nginx_setup]
-}
-
-module "CloudWatch" {
-  source = "./cloudwatch"
-  instance_id_private = module.ec2.instance_id_private
-  depends_on = [module.asg]
-  
-}
-
-module "route53"{
-  source = "./route53"
-  instance_ip_of_public = module.ec2.public_instance_public_ip
-  dns_name = "sameer.cloud" 
-  depends_on = [module.ec2]
-}
-
 
 resource "null_resource" "wait_for_rds" {
   depends_on = [module.rds]
@@ -116,33 +82,4 @@ resource "null_resource" "output_value" {
   }
   depends_on = [null_resource.wait_for_rds ]
 }
-
-resource "null_resource" "create_database" {
-  provisioner "local-exec" {
-    command = "ansible-playbook -i inventory.ini create_database.yml --vault-password-file /home/sameer/vault.pass"
-  }
-  depends_on = [null_resource.output_value]
-}
-
-resource "null_resource" "script_file" {
-  provisioner "local-exec" {
-    command = "ansible-playbook -i inventory.ini playbook.yml --vault-password-file /home/sameer/vault.pass"
-  }
-  depends_on = [null_resource.create_database]
-}
-
-resource "null_resource" "nginx_setup_onprivate" {
-  provisioner "local-exec" {
-    command = " ansible-playbook -i inventory.ini nginx_setup_onprivate.yml"
-  }
-  depends_on = [null_resource.script_file]
-}
-
-resource "null_resource" "nginx_setup" {
-  provisioner "local-exec" {
-    command = "ansible-playbook -i inventory.ini nginx_setup.yml"
-  }
-  depends_on = [null_resource.nginx_setup_onprivate]
-}
-
 
