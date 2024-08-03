@@ -1,0 +1,17 @@
+---
+- name: Import multiple playbooks
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: import playbook to create database on RDS
+      import_playbook: create_database.yml
+
+    - name: Import playbook to setup apache server on private server
+      import_playbook: playbook.yml
+
+    - name: Import playbook to setup nginx server on private server
+      import_playbook: nginx_setup_onprivate.yml
+
+    - name: Import playbook to setup nginx on public instance
+      import_playbook: nginx_setup.yml
