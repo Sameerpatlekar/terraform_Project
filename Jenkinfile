@@ -53,7 +53,7 @@ pipeline {
                   sh 'pwd;cd terraform/ ; terraform apply -input=false tfplan'
             }
         }
-        stage('Apply') {
+        stage('run ansible playbook') {
             steps { 
                   ansiblePlaybook credentialsId: 'jenkins-private-access', disableHostKeyChecking: true, installation: 'ansible', inventory: 'terraform/inventory.ini', playbook: 'terraform/ansible_script/main_playbook.yml', vaultCredentialsId: 'vault-password', vaultTmpPath: 'terraform/ansible_script/'
             }
