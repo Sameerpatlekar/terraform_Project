@@ -45,7 +45,7 @@ module "ec2" {
   source = "./ec2"
   ami = "ami-07c1b39b7b3d2525d"
   instance_type = "t2.micro"
-  key_name = "public-key"
+  key_name = "ansible-access"
   public_subnet_id = module.vpc.public_subnet_id
   private_subnet_id = module.vpc.private_subnet_id_1
   environment = "production"
